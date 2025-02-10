@@ -10,6 +10,7 @@ import com.airlinereservationsystem.airlinesreservationsystem.response.BookingRe
 import com.airlinereservationsystem.airlinesreservationsystem.response.ReservationResponseUser;
 import com.airlinereservationsystem.airlinesreservationsystem.response.SeatResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -33,7 +34,11 @@ private final UserService userService;
 
         // Get user from reservation (not hardcoded)
 
-        User user = userService.getUserById(1L);
+        User user = userService.getAuthencatedUser();
+
+        if(!(reservation.getUser().getId().equals(user.getId()))){
+            throw new UsernameNotFoundException("You can't book this reservation");
+        }
 
         // Create booking
         Booking booking = new Booking();

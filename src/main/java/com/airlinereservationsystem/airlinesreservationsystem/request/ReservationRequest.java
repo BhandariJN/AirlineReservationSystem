@@ -10,7 +10,7 @@ import java.util.Set;
 @Data
 public class ReservationRequest {
 
-    @NotNull(message = "User ID is required")
+
     private Long userId;
 
     @NotNull(message = "Flight ID is required")

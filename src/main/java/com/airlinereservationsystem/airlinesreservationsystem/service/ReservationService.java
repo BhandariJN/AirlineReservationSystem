@@ -56,6 +56,8 @@ public class ReservationService {
 
     @Transactional
     public Reservation makeReservation(ReservationRequest reservationRequest) {
+        User user =userService.getAuthencatedUser();
+        reservationRequest.setUserId(user.getId());
         //function to check already existes reservation of same user and same flight and same seatclass
         if (reservationExists(reservationRequest.getUserId(), reservationRequest.getFlightId(), reservationRequest.getSeatClass())) {
             throw new ResourceNotFoundException("Reservation already exists for the user on the flight! You Can Update the reservation");
@@ -66,8 +68,7 @@ public class ReservationService {
         Flight flight = Optional.ofNullable(flightService.getFlightByFlightNumber(reservationRequest.getFlightId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Flight not found"));
 
-        User user = Optional.ofNullable(userService.getUserById(reservationRequest.getUserId()))
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
 
         validateSeatAvailability(reservationRequest);
         // Fetch seats

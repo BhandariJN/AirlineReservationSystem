@@ -2,10 +2,10 @@ package com.airlinereservationsystem.airlinesreservationsystem.service;
 
 import com.airlinereservationsystem.airlinesreservationsystem.Enum.BookingStatus;
 import com.airlinereservationsystem.airlinesreservationsystem.Enum.PaymentStatus;
+import com.airlinereservationsystem.airlinesreservationsystem.exception.AlreadyExistsException;
+import com.airlinereservationsystem.airlinesreservationsystem.exception.ResourceNotFoundException;
 import com.airlinereservationsystem.airlinesreservationsystem.model.Booking;
-import com.airlinereservationsystem.airlinesreservationsystem.model.Flight;
 import com.airlinereservationsystem.airlinesreservationsystem.model.Payment;
-import com.airlinereservationsystem.airlinesreservationsystem.model.Reservation;
 import com.airlinereservationsystem.airlinesreservationsystem.repository.BookingRepository;
 import com.airlinereservationsystem.airlinesreservationsystem.repository.PaymentRepository;
 import com.airlinereservationsystem.airlinesreservationsystem.request.PaymentRequest;
@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @RequiredArgsConstructor
@@ -31,8 +30,15 @@ public class PaymentService {
 
         Booking booking = bookingService.getBookingById(paymentRequest.getBookingId());
        if (booking.getStatus() == BookingStatus.BOOKED) {
-            throw new RuntimeException("Booking is already confirmed");
+            throw new AlreadyExistsException("Booking is already confirmed");
         }
+
+        // Check if payment amount is equal to booking amount
+        if (paymentRequest.getAmount().compareTo(booking.getAmount()) != 0) {
+            throw new ResourceNotFoundException("Payment amount does not match booking amount");
+        }
+
+
 
         Payment payment = new Payment();
         payment.setAmount(paymentRequest.getAmount());
@@ -47,5 +53,7 @@ public class PaymentService {
         bookingRepository.save(booking);
         return payment;
     }
+
+
 
 }

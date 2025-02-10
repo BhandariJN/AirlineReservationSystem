@@ -1,6 +1,5 @@
 package com.airlinereservationsystem.airlinesreservationsystem.controller;
 
-import com.airlinereservationsystem.airlinesreservationsystem.Enum.SeatStatus;
 import com.airlinereservationsystem.airlinesreservationsystem.exception.ResourceNotFoundException;
 import com.airlinereservationsystem.airlinesreservationsystem.model.Reservation;
 import com.airlinereservationsystem.airlinesreservationsystem.repository.ReservationRepository;
@@ -14,10 +13,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -26,8 +23,7 @@ import java.util.List;
 public class ReservationController {
 
     private final ReservationService reservationService;
-    private final SeatRepository seatRepository;
-    private final ReservationRepository reservationRepository;
+
 
 
     @PostMapping("/reserve")

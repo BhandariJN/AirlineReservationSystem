@@ -17,5 +17,5 @@ public class AirlineResponse {
     private String phoneNumber;
     private String address;
     private List<Aeroplane> aeroplanes;
-    private List<Flight> flights;
+    private List<FlightResponse> flights;
 }

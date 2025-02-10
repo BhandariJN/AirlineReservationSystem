@@ -1,12 +1,19 @@
 package com.airlinereservationsystem.airlinesreservationsystem.service;
 
+import com.airlinereservationsystem.airlinesreservationsystem.exception.AlreadyExistsException;
 import com.airlinereservationsystem.airlinesreservationsystem.exception.ResourceNotFoundException;
 import com.airlinereservationsystem.airlinesreservationsystem.model.Role;
 import com.airlinereservationsystem.airlinesreservationsystem.model.User;
 import com.airlinereservationsystem.airlinesreservationsystem.repository.RoleRepository;  // Make sure RoleRepository is imported
 import com.airlinereservationsystem.airlinesreservationsystem.repository.UserRepository;
 import com.airlinereservationsystem.airlinesreservationsystem.request.RegisterRequest;
+import com.airlinereservationsystem.airlinesreservationsystem.request.UpdateUserRequest;
+import com.airlinereservationsystem.airlinesreservationsystem.response.UserResponse;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -16,30 +23,20 @@ import java.util.Set;
 @Service
 public class UserService {
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;  // Inject RoleRepository
+    private final PasswordEncoder passwordEncoder;
+    private final ModelMapper modelMapper;
 
-    public User getUserByEmail(String email){
-        return userRepository.findByEmail(email);
-    }
 
     public User createUser(RegisterRequest request) {
-        return Optional.of(request)
-                .filter(registerRequest -> !userRepository.existsByEmail(registerRequest.getEmail()))
-                .map(registerRequest -> {
+        return Optional.of(request).filter(user->!userRepository.existsByEmail(request.getEmail()))
+                .map(req->{
                     User user = new User();
-                    user.setEmail(registerRequest.getEmail());
-                    user.setPassword(registerRequest.getPassword());
-                    user.setFirstName(registerRequest.getFirstName());
-                    user.setLastName(registerRequest.getLastName());
-
-                    // Assign role
-                    Role role = roleRepository.findByRoleName(registerRequest.getRole())
-                            .orElse(roleRepository.save(new Role(registerRequest.getRole())));
-                    user.setRoles(Set.of(role));
-
+                    user.setEmail(request.getEmail());
+                    user.setPassword(passwordEncoder.encode(request.getPassword()));
+                    user.setFirstName(request.getFirstName());
+                    user.setLastName(request.getLastName());
                     return userRepository.save(user);
-                })
-                .orElseThrow(() -> new ResourceNotFoundException("User with email already exists: " + request.getEmail()));
+                }).orElseThrow(()->new AlreadyExistsException(request.getEmail()+ "email already exist!"));
     }
 
 
@@ -52,4 +49,29 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User with id not found: " + userId));
     }
 
+    public User updateUser(UpdateUserRequest request, Long id) {
+        return userRepository.findById(id).map(existingUser->{
+            existingUser.setFirstName(request.getFirstName());
+            existingUser.setLastName(request.getLastName());
+            return  userRepository.save(existingUser);
+        }).orElseThrow(()->new ResourceNotFoundException("User Not Found!"));
+    }
+
+
+    public void deleteUser(Long id) {
+
+        userRepository.findById(id)
+                .ifPresentOrElse(userRepository::delete, ()-> {throw new ResourceNotFoundException("User Not Found!");
+                });
+    }
+
+    public UserResponse convertToUserDto(User user) {
+        return modelMapper.map(user, UserResponse.class);
+    }
+
+    public User getAuthencatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        return userRepository.findByEmail(email);
+    }
 }
